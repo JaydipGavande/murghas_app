@@ -297,16 +297,6 @@ class _WorkFormScreenState extends State<WorkFormScreen> {
               ),
             ),
             const SizedBox(height: 14),
-            TextFormField(
-              controller: _machineCtrl,
-              decoration: InputDecoration(
-                labelText: '${s.machineName} *',
-                prefixIcon: const Icon(Icons.agriculture),
-              ),
-              validator: (v) =>
-                  (v == null || v.trim().isEmpty) ? 'मशीनचे नाव टाका' : null,
-            ),
-            const SizedBox(height: 14),
             Row(
               children: [
                 Expanded(
@@ -314,9 +304,9 @@ class _WorkFormScreenState extends State<WorkFormScreen> {
                     controller: _qtyCtrl,
                     keyboardType:
                         const TextInputType.numberWithOptions(decimal: true),
-                    decoration: InputDecoration(
-                      labelText: '${s.quantityTons} *',
-                      prefixIcon: const Icon(Icons.scale),
+                    decoration: const InputDecoration(
+                      labelText: 'टन (प्रमाण) *',
+                      prefixIcon: Icon(Icons.scale),
                     ),
                     onChanged: (_) => setState(() {}),
                     validator: (v) {
@@ -332,9 +322,9 @@ class _WorkFormScreenState extends State<WorkFormScreen> {
                     controller: _rateCtrl,
                     keyboardType:
                         const TextInputType.numberWithOptions(decimal: true),
-                    decoration: InputDecoration(
-                      labelText: '${s.ratePerTon} *',
-                      prefixIcon: const Icon(Icons.currency_rupee),
+                    decoration: const InputDecoration(
+                      labelText: 'दर / टन (₹) *',
+                      prefixIcon: Icon(Icons.currency_rupee),
                     ),
                     onChanged: (_) => setState(() {}),
                     validator: (v) {
@@ -342,34 +332,6 @@ class _WorkFormScreenState extends State<WorkFormScreen> {
                       if (val == null || val <= 0) return 'योग्य दर टाका';
                       return null;
                     },
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 14),
-            Row(
-              children: [
-                Expanded(
-                  child: TextFormField(
-                    controller: _extraCtrl,
-                    keyboardType:
-                        const TextInputType.numberWithOptions(decimal: true),
-                    decoration: InputDecoration(
-                      labelText: s.additionalCharges,
-                    ),
-                    onChanged: (_) => setState(() {}),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: TextFormField(
-                    controller: _discountCtrl,
-                    keyboardType:
-                        const TextInputType.numberWithOptions(decimal: true),
-                    decoration: InputDecoration(
-                      labelText: s.discount,
-                    ),
-                    onChanged: (_) => setState(() {}),
                   ),
                 ),
               ],
@@ -383,9 +345,9 @@ class _WorkFormScreenState extends State<WorkFormScreen> {
                       controller: _advanceCtrl,
                       keyboardType:
                           const TextInputType.numberWithOptions(decimal: true),
-                      decoration: InputDecoration(
-                        labelText: s.advancePayment,
-                        prefixIcon: const Icon(Icons.payments_outlined),
+                      decoration: const InputDecoration(
+                        labelText: 'अॅडव्हान्स जमा (₹)',
+                        prefixIcon: Icon(Icons.payments_outlined),
                       ),
                       onChanged: (_) => setState(() {}),
                     ),
@@ -411,13 +373,63 @@ class _WorkFormScreenState extends State<WorkFormScreen> {
                 ],
               ),
             ],
-            const SizedBox(height: 14),
-            TextFormField(
-              controller: _notesCtrl,
-              maxLines: 2,
-              decoration: InputDecoration(
-                labelText: s.notes,
-                prefixIcon: const Icon(Icons.note_outlined),
+            const SizedBox(height: 12),
+            Card(
+              child: ExpansionTile(
+                tilePadding: const EdgeInsets.symmetric(horizontal: 14),
+                childrenPadding: const EdgeInsets.fromLTRB(14, 0, 14, 14),
+                leading: const Icon(Icons.tune, color: AppColors.deepGreen),
+                title: const Text(
+                  'अधिक तपशील (मशीन, सवलत, टीप)',
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                ),
+                children: [
+                  const SizedBox(height: 8),
+                  TextFormField(
+                    controller: _machineCtrl,
+                    decoration: InputDecoration(
+                      labelText: s.machineName,
+                      prefixIcon: const Icon(Icons.agriculture),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextFormField(
+                          controller: _extraCtrl,
+                          keyboardType: const TextInputType.numberWithOptions(
+                              decimal: true),
+                          decoration: InputDecoration(
+                            labelText: s.additionalCharges,
+                          ),
+                          onChanged: (_) => setState(() {}),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: TextFormField(
+                          controller: _discountCtrl,
+                          keyboardType: const TextInputType.numberWithOptions(
+                              decimal: true),
+                          decoration: InputDecoration(
+                            labelText: s.discount,
+                          ),
+                          onChanged: (_) => setState(() {}),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: _notesCtrl,
+                    maxLines: 2,
+                    decoration: InputDecoration(
+                      labelText: s.notes,
+                      prefixIcon: const Icon(Icons.note_outlined),
+                    ),
+                  ),
+                ],
               ),
             ),
             const SizedBox(height: 18),

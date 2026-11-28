@@ -41,6 +41,21 @@ class WorkDetailScreen extends StatelessWidget {
         title: Text(work.customerName),
         actions: [
           IconButton(
+            icon: const Icon(Icons.print_outlined),
+            tooltip: s.printReceipt,
+            onPressed: () async {
+              final pdf = await pdfService.buildWorkReceiptPdf(
+                profile: app.profile,
+                work: work,
+                payments: payments,
+              );
+              await pdfService.printPdf(
+                pdf,
+                'Receipt_${work.customerName}',
+              );
+            },
+          ),
+          IconButton(
             icon: const Icon(Icons.edit),
             onPressed: () => Navigator.push(
               context,
@@ -70,6 +85,7 @@ class WorkDetailScreen extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
+          // Clean Summary Card
           Card(
             child: Padding(
               padding: const EdgeInsets.all(16),
@@ -77,32 +93,102 @@ class WorkDetailScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
-                        AppFormatters.date(work.workDate),
-                        style: const TextStyle(fontWeight: FontWeight.w700),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              work.customerName,
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .titleLarge
+                                  ?.copyWith(fontWeight: FontWeight.w800),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              '${work.village} • ${work.customerMobile}',
+                              style: TextStyle(
+                                color: Colors.grey.shade600,
+                                fontSize: 13,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                      Chip(
-                        label: Text(
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: (work.isPaid
+                                  ? AppColors.revenueGreen
+                                  : AppColors.pendingAmber)
+                              .withValues(alpha: 0.14),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(
                           work.isPaid ? 'पूर्ण जमा' : 'येणे बाकी',
                           style: TextStyle(
                             color: work.isPaid
                                 ? AppColors.revenueGreen
                                 : AppColors.pendingAmber,
                             fontWeight: FontWeight.w800,
+                            fontSize: 12,
                           ),
                         ),
                       ),
                     ],
                   ),
-                  const Divider(),
-                  _row('ग्राहक', work.customerName),
-                  _row('मोबाईल', work.customerMobile),
-                  _row('गाव', work.village),
+                  const SizedBox(height: 16),
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: AppColors.deepGreen.withValues(alpha: 0.06),
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        _amountBox(
+                          'एकूण बिल',
+                          AppFormatters.currency(work.totalAmount),
+                          AppColors.deepGreen,
+                        ),
+                        _amountBox(
+                          'जमा',
+                          AppFormatters.currency(work.receivedAmount),
+                          AppColors.revenueGreen,
+                        ),
+                        _amountBox(
+                          'बाकी',
+                          AppFormatters.currency(work.remainingBalance),
+                          work.remainingBalance > 0
+                              ? AppColors.pendingAmber
+                              : AppColors.revenueGreen,
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+
+          // Simple Work Details Card
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                children: [
+                  _row('तारीख', AppFormatters.date(work.workDate)),
                   _row('मशीन / ट्रॅक्टर', work.machineName),
-                  _row('प्रमाण', AppFormatters.tonsFull(work.quantityTons)),
-                  _row('दर प्रति टन', AppFormatters.currency(work.ratePerTon)),
+                  _row(
+                    'कटाई प्रमाण',
+                    '${AppFormatters.tonsFull(work.quantityTons)} × ${AppFormatters.currency(work.ratePerTon)}',
+                  ),
                   if (work.additionalCharges > 0)
                     _row(
                       'अतिरिक्त शुल्क',
@@ -110,29 +196,7 @@ class WorkDetailScreen extends StatelessWidget {
                     ),
                   if (work.discount > 0)
                     _row('सवलत', '- ${AppFormatters.currency(work.discount)}'),
-                  const Divider(),
-                  _row(
-                    s.totalBillAmount,
-                    AppFormatters.currency(work.totalAmount),
-                    bold: true,
-                  ),
-                  _row(
-                    s.totalReceived,
-                    AppFormatters.currency(work.receivedAmount),
-                    color: AppColors.revenueGreen,
-                  ),
-                  _row(
-                    s.remainingBalance,
-                    AppFormatters.currency(work.remainingBalance),
-                    bold: true,
-                    color: work.remainingBalance > 0
-                        ? AppColors.pendingAmber
-                        : AppColors.revenueGreen,
-                  ),
-                  if (work.notes.isNotEmpty) ...[
-                    const Divider(),
-                    Text('टीप: ${work.notes}'),
-                  ],
+                  if (work.notes.isNotEmpty) _row('टीप', work.notes),
                 ],
               ),
             ),
@@ -141,7 +205,7 @@ class WorkDetailScreen extends StatelessWidget {
 
           if (!work.isPaid)
             Padding(
-              padding: const EdgeInsets.only(bottom: 14),
+              padding: const EdgeInsets.only(bottom: 12),
               child: SizedBox(
                 height: 48,
                 child: ElevatedButton.icon(
@@ -160,91 +224,55 @@ class WorkDetailScreen extends StatelessWidget {
               ),
             ),
 
-          // PDF & WhatsApp Actions
-          Text(
-            'पावती आणि शेअरिंग',
-            style: Theme.of(context)
-                .textTheme
-                .titleMedium
-                ?.copyWith(fontWeight: FontWeight.w800),
-          ),
-          const SizedBox(height: 8),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
+          // Clean 2-Button PDF Row
+          Row(
             children: [
-              ElevatedButton.icon(
-                onPressed: () async {
-                  final pdf = await pdfService.buildWorkReceiptPdf(
-                    profile: app.profile,
-                    work: work,
-                    payments: payments,
-                  );
-                  await pdfService.sharePdf(
-                    pdf,
-                    'receipt_${work.id.substring(0, 8)}.pdf',
-                    '${app.profile.businessName} - ${work.customerName} यांची मुरघास पावती',
-                  );
-                },
-                icon: const Icon(Icons.picture_as_pdf),
-                label: Text(s.sharePdf),
-              ),
-              OutlinedButton.icon(
-                onPressed: () async {
-                  final pdf = await pdfService.buildWorkReceiptPdf(
-                    profile: app.profile,
-                    work: work,
-                    payments: payments,
-                  );
-                  final file = await pdfService.savePdfToFile(
-                    pdf,
-                    'receipt_${work.id.substring(0, 8)}.pdf',
-                  );
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('PDF सेव्ह केली: ${file.path}')),
+              Expanded(
+                child: ElevatedButton.icon(
+                  onPressed: () async {
+                    final pdf = await pdfService.buildWorkReceiptPdf(
+                      profile: app.profile,
+                      work: work,
+                      payments: payments,
                     );
-                  }
-                },
-                icon: const Icon(Icons.download),
-                label: Text(s.downloadPdf),
+                    await pdfService.sharePdf(
+                      pdf,
+                      'receipt_${work.id.substring(0, 8)}.pdf',
+                      '${app.profile.businessName} - ${work.customerName} यांची मुरघास पावती',
+                    );
+                  },
+                  icon: const Icon(Icons.picture_as_pdf),
+                  label: Text(s.sharePdf),
+                ),
               ),
-              OutlinedButton.icon(
-                onPressed: () async {
-                  final pdf = await pdfService.buildWorkReceiptPdf(
-                    profile: app.profile,
-                    work: work,
-                    payments: payments,
-                  );
-                  await pdfService.sharePdf(
-                    pdf,
-                    'receipt_${work.id.substring(0, 8)}.pdf',
-                    '${app.profile.businessName} - ${work.customerName} यांची मुरघास पावती',
-                  );
-                },
-                icon: const Icon(Icons.chat, color: AppColors.revenueGreen),
-                label: Text(s.shareWhatsApp),
-              ),
-              OutlinedButton.icon(
-                onPressed: () async {
-                  final pdf = await pdfService.buildWorkReceiptPdf(
-                    profile: app.profile,
-                    work: work,
-                    payments: payments,
-                  );
-                  await pdfService.printPdf(
-                    pdf,
-                    'Receipt_${work.customerName}',
-                  );
-                },
-                icon: const Icon(Icons.print),
-                label: Text(s.printReceipt),
+              const SizedBox(width: 10),
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: () async {
+                    final pdf = await pdfService.buildWorkReceiptPdf(
+                      profile: app.profile,
+                      work: work,
+                      payments: payments,
+                    );
+                    final file = await pdfService.savePdfToFile(
+                      pdf,
+                      'receipt_${work.id.substring(0, 8)}.pdf',
+                    );
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('PDF सेव्ह केली: ${file.path}')),
+                      );
+                    }
+                  },
+                  icon: const Icon(Icons.download),
+                  label: Text(s.downloadPdf),
+                ),
               ),
             ],
           ),
 
           if (payments.isNotEmpty) ...[
-            const SizedBox(height: 18),
+            const SizedBox(height: 20),
             Text(
               s.paymentHistory,
               style: Theme.of(context)
@@ -262,19 +290,40 @@ class WorkDetailScreen extends StatelessWidget {
     );
   }
 
-  Widget _row(String label, String value, {bool bold = false, Color? color}) {
+  Widget _amountBox(String label, String value, Color color) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: TextStyle(fontSize: 12, color: Colors.grey.shade700),
+        ),
+        const SizedBox(height: 2),
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 17,
+            fontWeight: FontWeight.w800,
+            color: color,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _row(String label, String value) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
+      padding: const EdgeInsets.symmetric(vertical: 5),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: const TextStyle(color: Colors.grey)),
-          Text(
-            value,
-            style: TextStyle(
-              fontWeight: bold ? FontWeight.w800 : FontWeight.w600,
-              fontSize: bold ? 16 : 14,
-              color: color,
+          Text(label, style: TextStyle(color: Colors.grey.shade600)),
+          const SizedBox(width: 12),
+          Flexible(
+            child: Text(
+              value,
+              textAlign: TextAlign.end,
+              style: const TextStyle(fontWeight: FontWeight.w600),
             ),
           ),
         ],

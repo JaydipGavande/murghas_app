@@ -507,7 +507,22 @@ class PdfService {
   Future<void> sharePdf(pw.Document pdf, String fileName, String text) async {
     if (kIsWeb) {
       final bytes = await pdf.save();
-      await Printing.sharePdf(bytes: bytes, filename: fileName);
+      try {
+        await SharePlus.instance.share(
+          ShareParams(
+            files: [
+              XFile.fromData(
+                bytes,
+                mimeType: 'application/pdf',
+                name: fileName,
+              ),
+            ],
+            text: text,
+          ),
+        );
+      } catch (_) {
+        await Printing.sharePdf(bytes: bytes, filename: fileName);
+      }
       return;
     }
     final dir = await getTemporaryDirectory();
