@@ -148,6 +148,7 @@ class _PaymentFormScreenState extends State<PaymentFormScreen> {
           padding: const EdgeInsets.all(16),
           children: [
             DropdownButtonFormField<String>(
+              key: ValueKey(_selectedCustomerId),
               initialValue: customerList.any((c) => c.id == _selectedCustomerId)
                   ? _selectedCustomerId
                   : null,

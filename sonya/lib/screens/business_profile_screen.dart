@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 
@@ -136,10 +137,23 @@ class _BusinessProfileScreenState extends State<BusinessProfileScreen> {
             TextFormField(
               controller: _mobileCtrl,
               keyboardType: TextInputType.phone,
+              maxLength: 10,
+              inputFormatters: [
+                FilteringTextInputFormatter.digitsOnly,
+                LengthLimitingTextInputFormatter(10),
+              ],
               decoration: InputDecoration(
                 labelText: s.mobileNumber,
                 prefixIcon: const Icon(Icons.phone_outlined),
+                counterText: '',
               ),
+              validator: (v) {
+                final val = (v ?? '').trim();
+                if (val.isNotEmpty && !RegExp(r'^[6-9]\d{9}$').hasMatch(val)) {
+                  return 'योग्य १० अंकी मोबाईल नंबर टाका';
+                }
+                return null;
+              },
             ),
             const SizedBox(height: 14),
             TextFormField(

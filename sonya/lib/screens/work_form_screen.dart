@@ -200,7 +200,13 @@ class _WorkFormScreenState extends State<WorkFormScreen> {
               children: [
                 Expanded(
                   child: DropdownButtonFormField<String>(
+                    key: ValueKey(selectedCustomer?.id),
                     initialValue: selectedCustomer?.id,
+                    hint: Text(
+                      customers.isEmpty
+                          ? 'आधी उजवीकडे + दाबून ग्राहक जोडा'
+                          : s.selectCustomer,
+                    ),
                     decoration: InputDecoration(
                       labelText: '${s.selectCustomer} *',
                       prefixIcon: const Icon(Icons.person_outline),
@@ -213,8 +219,9 @@ class _WorkFormScreenState extends State<WorkFormScreen> {
                           ),
                         )
                         .toList(),
-                    onChanged: (val) =>
-                        setState(() => _selectedCustomerId = val),
+                    onChanged: customers.isEmpty
+                        ? null
+                        : (val) => setState(() => _selectedCustomerId = val),
                     validator: (v) =>
                         v == null ? 'कृपया ग्राहक निवडा' : null,
                   ),
@@ -228,7 +235,7 @@ class _WorkFormScreenState extends State<WorkFormScreen> {
                         builder: (_) => const CustomerFormScreen(),
                       ),
                     );
-                    if (created != null) {
+                    if (created != null && mounted) {
                       setState(() => _selectedCustomerId = created.id);
                     }
                   },
@@ -237,6 +244,24 @@ class _WorkFormScreenState extends State<WorkFormScreen> {
                 ),
               ],
             ),
+            if (customers.isEmpty) ...[
+              const SizedBox(height: 10),
+              OutlinedButton.icon(
+                onPressed: () async {
+                  final created = await Navigator.push<Customer>(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const CustomerFormScreen(),
+                    ),
+                  );
+                  if (created != null && mounted) {
+                    setState(() => _selectedCustomerId = created.id);
+                  }
+                },
+                icon: const Icon(Icons.person_add),
+                label: Text('${s.addCustomer} (नवीन ग्राहक जोडा)'),
+              ),
+            ],
             if (selectedCustomer != null) ...[
               const SizedBox(height: 10),
               Container(
@@ -252,7 +277,7 @@ class _WorkFormScreenState extends State<WorkFormScreen> {
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        '${selectedCustomer.village}  •  Mo: ${selectedCustomer.mobile}',
+                        '${selectedCustomer.village}  •  मो: ${selectedCustomer.mobile}',
                         style: const TextStyle(fontWeight: FontWeight.w600),
                       ),
                     ),

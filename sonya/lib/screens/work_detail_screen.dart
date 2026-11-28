@@ -183,7 +183,7 @@ class WorkDetailScreen extends StatelessWidget {
                   await pdfService.sharePdf(
                     pdf,
                     'receipt_${work.id.substring(0, 8)}.pdf',
-                    'Murghas Receipt for ${work.customerName}',
+                    '${app.profile.businessName} - ${work.customerName} यांची मुरघास पावती',
                   );
                 },
                 icon: const Icon(Icons.picture_as_pdf),
@@ -210,10 +210,18 @@ class WorkDetailScreen extends StatelessWidget {
                 label: Text(s.downloadPdf),
               ),
               OutlinedButton.icon(
-                onPressed: () => pdfService.shareViaWhatsAppText(
-                  profile: app.profile,
-                  work: work,
-                ),
+                onPressed: () async {
+                  final pdf = await pdfService.buildWorkReceiptPdf(
+                    profile: app.profile,
+                    work: work,
+                    payments: payments,
+                  );
+                  await pdfService.sharePdf(
+                    pdf,
+                    'receipt_${work.id.substring(0, 8)}.pdf',
+                    '${app.profile.businessName} - ${work.customerName} यांची मुरघास पावती',
+                  );
+                },
                 icon: const Icon(Icons.chat, color: AppColors.revenueGreen),
                 label: Text(s.shareWhatsApp),
               ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import '../models/customer.dart';
@@ -98,16 +99,23 @@ class _CustomerFormScreenState extends State<CustomerFormScreen> {
             TextFormField(
               controller: _mobileCtrl,
               keyboardType: TextInputType.phone,
+              maxLength: 10,
+              inputFormatters: [
+                FilteringTextInputFormatter.digitsOnly,
+                LengthLimitingTextInputFormatter(10),
+              ],
               decoration: InputDecoration(
                 labelText: '${s.mobileNumber} *',
                 prefixIcon: const Icon(Icons.phone_outlined),
+                counterText: '',
               ),
               validator: (v) {
-                if (v == null || v.trim().isEmpty) {
+                final val = (v ?? '').trim();
+                if (val.isEmpty) {
                   return 'कृपया मोबाईल नंबर टाका';
                 }
-                if (v.trim().length < 10) {
-                  return 'योग्य १० अंकी मोबाईल नंबर टाका';
+                if (!RegExp(r'^[6-9]\d{9}$').hasMatch(val)) {
+                  return 'योग्य १० अंकी मोबाईल नंबर टाका (६ ते ९ ने सुरू होणारा)';
                 }
                 return null;
               },
