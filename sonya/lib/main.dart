@@ -27,14 +27,17 @@ class MurghasBusinessApp extends StatelessWidget {
           create: (_) => BusinessDataProvider()..loadAll(),
         ),
       ],
-      child: Consumer<AppProvider>(
-        builder: (context, app, _) {
+      child: Builder(
+        builder: (context) {
+          final themeMode = context.select<AppProvider, ThemeMode>(
+            (app) => app.themeMode,
+          );
           return MaterialApp(
             debugShowCheckedModeBanner: false,
             title: 'मुरघास व्यवसाय व्यवस्थापन',
             theme: AppTheme.lightTheme(),
             darkTheme: AppTheme.darkTheme(),
-            themeMode: app.themeMode,
+            themeMode: themeMode,
             home: const MainShell(),
           );
         },
