@@ -514,7 +514,10 @@ class PdfService {
     final file = File(p.join(dir.path, fileName));
     await file.writeAsBytes(await pdf.save());
     await SharePlus.instance.share(
-      ShareParams(files: [XFile(file.path)], text: text),
+      ShareParams(
+        files: [XFile(file.path, mimeType: 'application/pdf')],
+        text: text,
+      ),
     );
   }
 
